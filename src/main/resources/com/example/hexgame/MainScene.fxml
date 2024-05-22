@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.hexgame.MainController">
+    <children>
+        <Pane fx:id="boardPane" layoutX="50.0" layoutY="84.0" prefHeight="470.0" prefWidth="700.0" />
+        <RadioButton fx:id="size5Radio" layoutX="50.0" layoutY="27.0" onAction="#handleChangeSize" prefHeight="18.0" prefWidth="42.0" text="5x5" />
+        <RadioButton fx:id="size11Radio" layoutX="121.0" layoutY="27.0" onAction="#handleChangeSize" prefHeight="18.0" prefWidth="54.0" text="11x11" />
+        <RadioButton fx:id="size17Radio" layoutX="200.0" layoutY="27.0" onAction="#handleChangeSize" prefHeight="18.0" prefWidth="54.0" text="17x17" />
+        <Button layoutX="268.0" layoutY="14.0" mnemonicParsing="false" onAction="#handleReset" prefHeight="26.0" prefWidth="65.0" text="Reset" />
+        <Label fx:id="currentPlayerLabel" layoutX="347.0" layoutY="14.0" prefHeight="26.0" prefWidth="282.0" text="Current Player: Player 1 (Red)" />
+    </children>
+</AnchorPane>
