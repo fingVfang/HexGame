@@ -1,15 +1,16 @@
 package com.example.hexgame;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class HexGame extends Application {
 
@@ -20,27 +21,40 @@ public class HexGame extends Application {
 
     private boolean playerTurn = true; // Oyuncu sırasını belirlemek için bir bayrak
 
+    private Label turnLabel; // Hamle sırasını gösteren etiket
+
     @Override
     public void start(Stage primaryStage) {
         AnchorPane tileMap = new AnchorPane();
-        Scene scene = new Scene(tileMap, 950, 600);
+        VBox root = new VBox(); // Yatay yerine dikey bir düzen kullanmak için VBox kullandık.
+        Scene scene = new Scene(root, 800, 600);
+
+        // Hamle sırasını gösteren etiket
+        turnLabel = new Label("Sıra: Oyuncu 1");
+        turnLabel.setAlignment(Pos.CENTER);
 
         Button btn5x5 = new Button("5x5");
         Button btn11x11 = new Button("11x11");
         Button btn17x17 = new Button("17x17");
 
-        btn5x5.setLayoutX(23);
-        btn5x5.setLayoutY(530);
-        btn11x11.setLayoutX(60);
-        btn11x11.setLayoutY(530);
-        btn17x17.setLayoutX(110);
-        btn17x17.setLayoutY(530);
+        btn5x5.setOnAction(event -> {
+            createTileMap(tileMap, 5, 5);
+            turnLabel.setText("Sıra: Oyuncu 1");
+        });
+        btn11x11.setOnAction(event -> {
+            createTileMap(tileMap, 11, 11);
+            turnLabel.setText("Sıra: Oyuncu 1");
+        });
+        btn17x17.setOnAction(event -> {
+            createTileMap(tileMap, 17, 17);
+            turnLabel.setText("Sıra: Oyuncu 1");
+        });
 
-        btn5x5.setOnAction(event -> createTileMap(tileMap, 5, 5));
-        btn11x11.setOnAction(event -> createTileMap(tileMap, 11, 11));
-        btn17x17.setOnAction(event -> createTileMap(tileMap, 17, 17));
+        btn5x5.setLayoutX(40); // Değer 20 yerine 40
+        btn11x11.setLayoutX(120); // Değer 100 yerine 120
+        btn17x17.setLayoutX(200); // Değer 180 yerine 200
 
-        tileMap.getChildren().addAll(btn5x5, btn11x11, btn17x17);
+        root.getChildren().addAll(turnLabel, tileMap, btn5x5, btn11x11, btn17x17);
 
         primaryStage.setScene(scene);
         primaryStage.setTitle("Hex Game");
@@ -104,6 +118,8 @@ public class HexGame extends Application {
                 isColored = true; // Altıgeni boyandı olarak işaretle
                 setDisable(true); // Tıklanabilirliği kapat
 
+                String playerTurnText = playerTurn ? "Sıra: Oyuncu 1" : "Sıra: Oyuncu 2";
+                turnLabel.setText(playerTurnText);
             });
         }
 
