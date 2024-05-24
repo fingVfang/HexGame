@@ -1,130 +1,97 @@
 package com.example.hexgame;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class HexGame extends Application {
 
-    private static final double r = 20; // hexagonun merkezinden köşesine olan mesafe
-    private static final double n = Math.sqrt(r * r * 0.75); // hexagonun merkezinden kenar ortasına olan mesafe
-    private static final double TILE_YUKSEKLIGI = 2 * r;
-    private static final double TILE_GENISLIGI = 2 * n;
-
-    private boolean playerTurn = true; // Oyuncu sırasını belirlemek için bir bayrak
-
-    private Label turnLabel; // Hamle sırasını gösteren etiket
+    private Label turnLabel; // Turu gösteren etiket
+    private Board board; // Oyun tahtası
+    private Player player1, player2; // Oyuncular
+    private boolean playerTurn = true; // Oyuncu turu
 
     @Override
     public void start(Stage primaryStage) {
+        // Oyuncu isimlerini ve renklerini al
+        String player1Name = getPlayerName("Oyuncu 1");
+        String player2Name = getPlayerName("Oyuncu 2");
+        List<javafx.scene.paint.Color> availableColors = new ArrayList<>(Utils.getAvailableColors());
+        player1 = new Player(player1Name, Utils.getPlayerColor(player1Name, availableColors));
+        availableColors.remove(player1.getColor());
+        player2 = new Player(player2Name, Utils.getPlayerColor(player2Name, availableColors));
+
+        // Ana düzen elemanlarını oluştur
         AnchorPane tileMap = new AnchorPane();
-        VBox root = new VBox(); // Yatay yerine dikey bir düzen kullanmak için VBox kullandık.
+        VBox root = new VBox();
         Scene scene = new Scene(root, 800, 600);
 
-        // Hamle sırasını gösteren etiket
-        turnLabel = new Label("Sıra: Oyuncu 1");
+        // Turu gösteren etiketi oluştur
+        turnLabel = new Label("Sıra: " + player1.getName());
         turnLabel.setAlignment(Pos.CENTER);
 
+        // Butonları oluştur ve oyun tahtasını belirli boyutlarda oluşturmak için kullan
         Button btn5x5 = new Button("5x5");
         Button btn11x11 = new Button("11x11");
         Button btn17x17 = new Button("17x17");
+        btn5x5.setOnAction(event -> createBoard(tileMap, 5, 5));
+        btn11x11.setOnAction(event -> createBoard(tileMap, 11, 11));
+        btn17x17.setOnAction(event -> createBoard(tileMap, 17, 17));
 
-        btn5x5.setOnAction(event -> {
-            createTileMap(tileMap, 5, 5);
-            turnLabel.setText("Sıra: Oyuncu 1");
-        });
-        btn11x11.setOnAction(event -> {
-            createTileMap(tileMap, 11, 11);
-            turnLabel.setText("Sıra: Oyuncu 1");
-        });
-        btn17x17.setOnAction(event -> {
-            createTileMap(tileMap, 17, 17);
-            turnLabel.setText("Sıra: Oyuncu 1");
-        });
+        // "Nasıl Oynanır?" butonunu oluştur ve tıklanınca açıklama göster
+        Button howToPlayButton = new Button("Nasıl Oynanır?");
+        howToPlayButton.setOnAction(event -> showHowToPlayDialog());
 
-        btn5x5.setLayoutX(40); // Değer 20 yerine 40
-        btn11x11.setLayoutX(120); // Değer 100 yerine 120
-        btn17x17.setLayoutX(200); // Değer 180 yerine 200
-
-        root.getChildren().addAll(turnLabel, tileMap, btn5x5, btn11x11, btn17x17);
-
+        // Ana düzeni oluştur ve sahneye ekle
+        root.getChildren().addAll(turnLabel, tileMap, btn5x5, btn11x11, btn17x17, howToPlayButton);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Hex Game");
         primaryStage.show();
     }
 
-    private void createTileMap(AnchorPane tileMap, int row, int col) {
-        tileMap.getChildren().removeIf(node -> node instanceof Tile); // Mevcut haritadaki Tile'ları kaldır
+    // Oyuncu adını al
+    private String getPlayerName(String player) {
+        TextInputDialog dialog = new TextInputDialog(player);
+        dialog.setTitle("Oyuncu Adı");
+        dialog.setHeaderText(null);
+        dialog.setContentText(player + " adını girin:");
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse(player);
+    }
 
-        double xBaslangicKaydirma = 40; // tüm alanı sağa kaydırma
-        double yBaslangicKaydirma = 40; // tüm alanı aşağı kaydırma
+    // Oyun tahtasını oluştur
+    private void createBoard(AnchorPane tileMap, int row, int col) {
+        board = new Board(tileMap, row, col, player1, player2, turnLabel);
+        turnLabel.setText("Sıra: " + player1.getName());
+    }
 
-        for (int y = 0; y < row; y++) {
-            for (int x = 0; x < col; x++) {
-                double xKoord = x * TILE_GENISLIGI + y * n + xBaslangicKaydirma;
-                double yKoord = y * TILE_YUKSEKLIGI * 0.75 + yBaslangicKaydirma;
-
-                Tile tile = new Tile(xKoord, yKoord);
-                tileMap.getChildren().add(tile);
-            }
-        }
+    // "Nasıl Oynanır?" açıklamasını göster
+    private void showHowToPlayDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Nasıl Oynanır?");
+        alert.setHeaderText(null);
+        alert.setContentText(
+                "HexGame, iki oyunculu bir oyundur. Oyunun amacı, altıgenlerden oluşan bir tahtada\n" +
+                        "karşılıklı iki kenarı birleştiren bir yol oluşturarak diğer oyuncuya engel olmaktır.\n" +
+                        "Sıranız geldiğinde bir altıgen seçin ve kendi renginizle doldurun.\n" +
+                        "Bir yolu tamamladığınızda, oyunu kazanırsınız.\n" +
+                        "İyi eğlenceler!"
+        );
+        alert.showAndWait();
     }
 
     public static void main(String[] args) {
         launch(args);
-    }
-
-    public class Tile extends Polygon {
-        private boolean isColored = false; // Altığenin boyanıp boyanmadığını belirlemek için bayrak
-
-        public Tile(double x, double y) {
-            // Köşe koordinatlarını kullanarak hexagonu oluşturur
-            getPoints().addAll(
-                    x, y,
-                    x + n, y - r * 0.5,
-                    x + TILE_GENISLIGI, y,
-                    x + TILE_GENISLIGI, y + r,
-                    x + n, y + r * 1.5,
-                    x, y + r
-            );
-
-            // Görselleri ayarla
-            setFill(Color.TRANSPARENT); // Başlangıçta her kareyi boş olarak ayarla
-            setStrokeWidth(1);
-            setStroke(Color.BLACK);
-
-            // Tıklama dinleyicisi ekle
-            setOnMouseClicked(event -> {
-                // Eğer altıgen daha önce boyanmışsa, tıklamayı işleme
-                if (isColored) {
-                    return;
-                }
-
-                // Tile'ın rengini değiştir
-                if (playerTurn) {
-                    setFill(Color.RED);
-                } else {
-                    setFill(Color.BLUE);
-                }
-                playerTurn = !playerTurn; // Oyuncu sırasını değiştir
-                isColored = true; // Altıgeni boyandı olarak işaretle
-                setDisable(true); // Tıklanabilirliği kapat
-
-                String playerTurnText = playerTurn ? "Sıra: Oyuncu 1" : "Sıra: Oyuncu 2";
-                turnLabel.setText(playerTurnText);
-            });
-        }
-
-        public boolean isColored() {
-            return isColored;
-        }
     }
 }
