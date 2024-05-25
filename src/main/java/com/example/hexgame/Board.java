@@ -1,7 +1,11 @@
 package com.example.hexgame;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+
+import java.util.Optional;
 
 public class Board {
 
@@ -10,6 +14,8 @@ public class Board {
     private final Player player1, player2; // Oyuncular
     private final Label turnLabel; // Turu gösteren etiket
     private boolean playerTurn = true; // Şu anki oyuncu turu
+    private boolean gameEnded = false; // Oyunun bitip bitmediğini kontrol etmek için bir bayrak
+    private boolean firstMove = true; // İlk hamleyi takip etmek için bir bayrak
 
     // Kurucu metod, taş haritasını oluşturur
     public Board(AnchorPane tileMap, int row, int col, Player player1, Player player2, Label turnLabel) {
@@ -65,6 +71,76 @@ public class Board {
             Utils.showWinnerAnimation(tileMap, currentPlayer.getName(), currentPlayer.getColor()); // Kazanan animasyonunu göster
         }
     }
+
+
+    // Hamleyi gerçekleştiren metod
+    private void makeMove(Tile tile) {
+        if (gameEnded) {
+            return;
+        }
+
+        // Şu anki oyuncuyu al
+        Player currentPlayer = getCurrentPlayer();
+
+        // Taşı renklendir ve oyuncuyu ayarla
+        tile.setFill(currentPlayer.getColor());
+        tile.setPlayer(currentPlayer);
+        tile.setColored(true);
+        tile.setDisable(true);
+
+        // Kazanma koşulunu kontrol et
+        if (checkWinCondition(currentPlayer)) {
+            String winner = currentPlayer.getName() + " Kazandı!";
+            turnLabel.setText(winner);
+            disableAllTiles();
+            Utils.showWinnerAnimation(tileMap, currentPlayer.getName(), currentPlayer.getColor());
+            gameEnded = true;
+            return;
+        }
+
+        // İlk hamle yapıldıktan sonra takas işlemi için kontrol et
+        if (firstMove) {
+            swapTiles();
+        } else {
+            // Oyuncu turunu değiştir
+            playerTurn = !playerTurn;
+            String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
+            turnLabel.setText(playerTurnText);
+        }
+    }
+
+    // Taşları takas eden metod
+    private void swapTiles() {
+        if (!firstMove) {
+            return;
+        }
+
+        // İkinci oyuncunun taşını seçme diyalogunu göster
+        showSwapDialog();
+    }
+
+    // Takas işlemi için diyalog gösteren metod
+    private void showSwapDialog() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Takas Yap");
+        alert.setHeaderText(null);
+        alert.setContentText("İlk taşı oynadınız. Taşları takas etmek ister misiniz?");
+
+        ButtonType buttonTypeYes = new ButtonType("Evet");
+        ButtonType buttonTypeNo = new ButtonType("Hayır");
+
+        alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == buttonTypeYes) {
+            playerTurn = !playerTurn;
+            String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
+            turnLabel.setText(playerTurnText);
+        }
+
+        firstMove = false; // İlk hamle yapıldı olarak işaretle
+    }
+
 
     // Şu anki oyuncuyu döndüren metod
     private Player getCurrentPlayer() {
