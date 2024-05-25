@@ -67,6 +67,11 @@ public class Tile extends Polygon {
         return yIndex;
     }
 
+    // Kenar rengini ayarlayan metod
+    public void setStrokeColor(Color color) {
+        setStroke(color);
+    }
+
     // Tıklama animasyonunu oynatan metod
     private void playClickAnimation() {
         ScaleTransition st = new ScaleTransition(Duration.millis(200), this);
