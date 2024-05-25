@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -22,7 +23,6 @@ public class HexGame extends Application {
     private Label turnLabel; // Turu gösteren etiket
     private Board board; // Oyun tahtası
     private Player player1, player2; // Oyuncular
-    private boolean playerTurn = true; // Oyuncu turu
 
     @Override
     public void start(Stage primaryStage) {
@@ -44,6 +44,7 @@ public class HexGame extends Application {
         primaryStage.setTitle("Hex Game");
         primaryStage.show();
     }
+
     private void showMainScreen(Stage primaryStage) {
         // Oyuncu isimlerini ve renklerini al
         String player1Name = getPlayerName("Oyuncu 1");
@@ -55,12 +56,13 @@ public class HexGame extends Application {
 
         // Ana düzen elemanlarını oluştur
         AnchorPane tileMap = new AnchorPane();
-        VBox root = new VBox();
+        BorderPane root = new BorderPane();
         Scene scene = new Scene(root, 800, 600);
 
-        // Turu gösteren etiketi oluştur
+        // Turu gösteren etiketi oluştur ve stilini ayarla
         turnLabel = new Label("Sıra: " + player1.getName());
-        turnLabel.setAlignment(Pos.CENTER);
+        turnLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
+        turnLabel.setAlignment(Pos.CENTER_RIGHT);
 
         // Butonları oluştur ve oyun tahtasını belirli boyutlarda oluşturmak için kullan
         Button btn5x5 = new Button("5x5");
@@ -79,8 +81,11 @@ public class HexGame extends Application {
         buttonBox.setAlignment(Pos.CENTER);
 
         // Ana düzeni oluştur ve sahneye ekle
-        root.getChildren().addAll(turnLabel, tileMap, buttonBox);
-        VBox.setVgrow(tileMap, javafx.scene.layout.Priority.ALWAYS); // TileMap'in ortada esneklik göstermesini sağla
+        root.setTop(turnLabel);
+        BorderPane.setAlignment(turnLabel, Pos.CENTER_RIGHT);
+        root.setCenter(tileMap);
+        root.setBottom(buttonBox);
+
         primaryStage.setScene(scene);
         primaryStage.setTitle("Hex Game");
         primaryStage.show();
@@ -116,7 +121,6 @@ public class HexGame extends Application {
         );
         alert.showAndWait();
     }
-
 
     public static void main(String[] args) {
         launch(args);
