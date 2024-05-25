@@ -1,11 +1,17 @@
 package com.example.hexgame;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 public class Board {
 
@@ -16,6 +22,8 @@ public class Board {
     private boolean playerTurn = true; // Şu anki oyuncu turu
     private boolean gameEnded = false; // Oyunun bitip bitmediğini kontrol etmek için bir bayrak
     private boolean secondPlayerFirstMove = true; // İkinci oyuncunun ilk hamlesini takip etmek için bir bayrak
+    private List<Tile> cornerTiles; // Köşe taşları listesi
+    private Timeline colorChangeTimeline; // Renk değiştirme zaman çizelgesi
 
     // Kurucu metod, taş haritasını oluşturur
     public Board(AnchorPane tileMap, int row, int col, Player player1, Player player2, Label turnLabel) {
@@ -26,11 +34,13 @@ public class Board {
         this.player2 = player2;
         this.turnLabel = turnLabel;
         createTileMap(); // Taş haritasını oluştur
+        startCornerTileColorChange(); // Köşe taşlarının rengini değiştirmeyi başlat
     }
 
     // Taş haritasını oluşturan metod
     private void createTileMap() {
         tileMap.getChildren().clear(); // Taş haritasını temizle
+        cornerTiles = new ArrayList<>(); // Köşe taşları listesini başlat
 
         // Taşların başlangıç koordinatlarını hesapla
         double xBaslangicKaydirma = 40;
@@ -44,7 +54,47 @@ public class Board {
 
                 Tile tile = new Tile(x, y, xKoord, yKoord, this);
                 tileMap.getChildren().add(tile); // Taşı haritaya ekle
+
+                // Sadece dış kenarlardaki taşların kenarlarını renklendir
+                if (isCornerTile(x, y)) {
+                    cornerTiles.add(tile); // Köşe taşlarını listeye ekle
+                }
+                if (y == 0 || y == row - 1 || x == 0 || x == col - 1) {
+                    Color strokeColor = getEdgeColor(x, y);
+                    tile.setStrokeColor(strokeColor);
+                }
             }
+        }
+    }
+
+    // Kenarlardaki taşların renklerini belirleyen metod
+    private Color getEdgeColor(int x, int y) {
+        if (y == 0 || y == row - 1) {
+            return player1.getColor(); // Üst ve alt kenarlar için Player 1'in rengi
+        } else if (x == 0 || x == col - 1) {
+            return player2.getColor(); // Sağ ve sol kenarlar için Player 2'nin rengi
+        }
+        return Color.BLACK; // Diğer durumlar için siyah (varsayılan)
+    }
+
+    // Köşe taşları belirleyen metod
+    private boolean isCornerTile(int x, int y) {
+        return (x == 0 && y == 0) || (x == 0 && y == row - 1) || (x == col - 1 && y == 0) || (x == col - 1 && y == row - 1);
+    }
+
+    // Köşe taşlarının rengini değiştiren zaman çizelgesini başlatan metod
+    private void startCornerTileColorChange() {
+        colorChangeTimeline = new Timeline(new KeyFrame(Duration.seconds(1.5), event -> changeCornerTileColors()));
+        colorChangeTimeline.setCycleCount(Timeline.INDEFINITE); // Süresiz döngü
+        colorChangeTimeline.play(); // Zaman çizelgesini başlat
+    }
+
+    // Köşe taşlarının renklerini değiştiren metod
+    private void changeCornerTileColors() {
+        for (Tile tile : cornerTiles) {
+            Color currentColor = (Color) tile.getStroke();
+            Color newColor = currentColor.equals(player1.getColor()) ? player2.getColor() : player1.getColor();
+            tile.setStrokeColor(newColor);
         }
     }
 
@@ -77,6 +127,7 @@ public class Board {
             disableAllTiles();
             Utils.showWinnerAnimation(tileMap, currentPlayer.getName(), currentPlayer.getColor());
             gameEnded = true;
+            colorChangeTimeline.stop(); // Oyunu kazanıldığında renk değiştirme animasyonunu durdur
             return;
         }
 
@@ -116,10 +167,12 @@ public class Board {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == buttonTypeYes) {
             swapStones();
-            playerTurn = !playerTurn;
-            String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
-            turnLabel.setText(playerTurnText);
         }
+
+        // Sıra her iki durumda da 1. oyuncuya geçmeli
+        playerTurn = true;
+        String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
+        turnLabel.setText(playerTurnText);
 
         secondPlayerFirstMove = false; // İkinci oyuncunun ilk hamlesi yapıldı olarak işaretle
     }
