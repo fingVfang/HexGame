@@ -8,7 +8,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -24,6 +26,25 @@ public class HexGame extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        // Hoş geldiniz ekranı
+        Label welcomeLabel = new Label("HexGame'e Hoş Geldiniz!");
+        welcomeLabel.setStyle("-fx-font-size: 24; -fx-text-fill: #000;");
+        Button startButton = new Button("Başla");
+        startButton.setOnAction(event -> showMainScreen(primaryStage));
+
+        Button howToPlayButton = new Button("Nasıl Oynanır?");
+        howToPlayButton.setOnAction(event -> showHowToPlayDialog());
+
+        VBox welcomeLayout = new VBox(20, welcomeLabel, startButton, howToPlayButton);
+        welcomeLayout.setAlignment(Pos.CENTER);
+        Scene welcomeScene = new Scene(welcomeLayout, 800, 600);
+
+        primaryStage.setScene(welcomeScene);
+        primaryStage.setTitle("Hex Game");
+        primaryStage.show();
+    }
+    private void showMainScreen(Stage primaryStage) {
         // Oyuncu isimlerini ve renklerini al
         String player1Name = getPlayerName("Oyuncu 1");
         String player2Name = getPlayerName("Oyuncu 2");
@@ -53,8 +74,13 @@ public class HexGame extends Application {
         Button howToPlayButton = new Button("Nasıl Oynanır?");
         howToPlayButton.setOnAction(event -> showHowToPlayDialog());
 
+        // Butonları bir HBox içinde düzenleyin
+        HBox buttonBox = new HBox(10, btn5x5, btn11x11, btn17x17, howToPlayButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
         // Ana düzeni oluştur ve sahneye ekle
-        root.getChildren().addAll(turnLabel, tileMap, btn5x5, btn11x11, btn17x17, howToPlayButton);
+        root.getChildren().addAll(turnLabel, tileMap, buttonBox);
+        VBox.setVgrow(tileMap, javafx.scene.layout.Priority.ALWAYS); // TileMap'in ortada esneklik göstermesini sağla
         primaryStage.setScene(scene);
         primaryStage.setTitle("Hex Game");
         primaryStage.show();
@@ -90,6 +116,7 @@ public class HexGame extends Application {
         );
         alert.showAndWait();
     }
+
 
     public static void main(String[] args) {
         launch(args);
