@@ -15,7 +15,7 @@ public class Board {
     private final Label turnLabel; // Turu gösteren etiket
     private boolean playerTurn = true; // Şu anki oyuncu turu
     private boolean gameEnded = false; // Oyunun bitip bitmediğini kontrol etmek için bir bayrak
-    private boolean firstMove = true; // İlk hamleyi takip etmek için bir bayrak
+    private boolean secondPlayerFirstMove = true; // İkinci oyuncunun ilk hamlesini takip etmek için bir bayrak
 
     // Kurucu metod, taş haritasını oluşturur
     public Board(AnchorPane tileMap, int row, int col, Player player1, Player player2, Label turnLabel) {
@@ -52,26 +52,8 @@ public class Board {
     public void onTileClicked(Tile tile) {
         if (tile.isColored()) return; // Eğer taş zaten renklendirilmişse işlem yapma
 
-        Player currentPlayer = getCurrentPlayer(); // Şu anki oyuncuyu al
-        tile.setFill(currentPlayer.getColor()); // Taşı renklendir
-        tile.setPlayer(currentPlayer); // Taşın sahibini ayarla
-        playerTurn = !playerTurn; // Oyuncu turunu değiştir
-        tile.setColored(true); // Taşı renklendirildi olarak işaretle
-        tile.setDisable(true); // Taşı devre dışı bırak
-
-        // Turu gösteren etiketi güncelle
-        String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
-        turnLabel.setText(playerTurnText);
-
-        // Kazanma koşulunu kontrol et
-        if (checkWinCondition(currentPlayer)) {
-            String winner = currentPlayer.getName() + " Kazandı!";
-            turnLabel.setText(winner); // Kazananı gösteren etiketi güncelle
-            disableAllTiles(); // Tüm taşları devre dışı bırak
-            Utils.showWinnerAnimation(tileMap, currentPlayer.getName(), currentPlayer.getColor()); // Kazanan animasyonunu göster
-        }
+        makeMove(tile);
     }
-
 
     // Hamleyi gerçekleştiren metod
     private void makeMove(Tile tile) {
@@ -98,8 +80,8 @@ public class Board {
             return;
         }
 
-        // İlk hamle yapıldıktan sonra takas işlemi için kontrol et
-        if (firstMove) {
+        // İkinci oyuncunun ilk hamlesinden sonra takas işlemi için kontrol et
+        if (!playerTurn && secondPlayerFirstMove) {
             swapTiles();
         } else {
             // Oyuncu turunu değiştir
@@ -111,11 +93,11 @@ public class Board {
 
     // Taşları takas eden metod
     private void swapTiles() {
-        if (!firstMove) {
+        if (!secondPlayerFirstMove) {
             return;
         }
 
-        // İkinci oyuncunun taşını seçme diyalogunu göster
+        // Takas işlemi için diyalog göster
         showSwapDialog();
     }
 
@@ -124,7 +106,7 @@ public class Board {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Takas Yap");
         alert.setHeaderText(null);
-        alert.setContentText("İlk taşı oynadınız. Taşları takas etmek ister misiniz?");
+        alert.setContentText("İkinci oyuncu ilk taşını oynadı. Taşları takas etmek ister misiniz?");
 
         ButtonType buttonTypeYes = new ButtonType("Evet");
         ButtonType buttonTypeNo = new ButtonType("Hayır");
@@ -132,15 +114,35 @@ public class Board {
         alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == buttonTypeYes) {
+        if (result.isPresent() && result.get() == buttonTypeYes) {
+            swapStones();
             playerTurn = !playerTurn;
             String playerTurnText = "Sıra: " + getCurrentPlayer().getName();
             turnLabel.setText(playerTurnText);
         }
 
-        firstMove = false; // İlk hamle yapıldı olarak işaretle
+        secondPlayerFirstMove = false; // İkinci oyuncunun ilk hamlesi yapıldı olarak işaretle
     }
 
+    // Taşları takas eden metod
+    private void swapStones() {
+        for (var node : tileMap.getChildren()) {
+            if (node instanceof Tile) {
+                Tile tile = (Tile) node;
+                Player currentPlayer = tile.getPlayer();
+                // İlk oyuncunun taşını bul
+                if (currentPlayer == player1) {
+                    // İlk oyuncunun taşını ikinci oyuncunun taşıyla değiştir
+                    tile.setPlayer(player2);
+                    tile.setFill(player2.getColor());
+                } else if (currentPlayer == player2) {
+                    // İkinci oyuncunun taşını birinci oyuncunun taşıyla değiştir
+                    tile.setPlayer(player1);
+                    tile.setFill(player1.getColor());
+                }
+            }
+        }
+    }
 
     // Şu anki oyuncuyu döndüren metod
     private Player getCurrentPlayer() {
