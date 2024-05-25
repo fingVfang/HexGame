@@ -4,6 +4,7 @@ import javafx.scene.paint.Color;
 
 public class Player {
 
+
     // Boş oyuncu, kullanılmayan yerleri temsil etmek için kullanılır
     public static final Player NONE = new Player("NONE", Color.TRANSPARENT);
 
